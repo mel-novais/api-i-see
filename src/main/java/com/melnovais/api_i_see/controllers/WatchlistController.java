@@ -35,4 +35,14 @@ public class WatchlistController {
         logger.info("Adicionando séries aos favoritos: {}", seriesIds);
         return watchlistService.adicionarSeriesFavoritas(seriesIds, accountId, sessionId);
     }
+
+    // Endpoint para adicionar séries à watchlist "Terminadas"
+    @PostMapping("/adicionarTerminadas")
+    public ResponseEntity<String> adicionarSeriesTerminadas(
+            @RequestBody List<Integer> seriesIds,
+            @RequestParam String listId,
+            @RequestParam String sessionId) {
+        logger.info("Adicionando séries à lista 'Terminadas': {}", seriesIds);
+        return watchlistService.adicionarSeriesTerminadas(seriesIds, listId, sessionId);
+    }
 }
