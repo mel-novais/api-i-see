@@ -15,7 +15,7 @@ import java.util.Map;
 
 @Service
 public class WatchlistService {
-    private static final String API_KEY = "eba6b92a7ac8f2164e0b744b637a5af5";
+    private static final String API_KEY = "";
     private static final String SEARCH_URL = "https://api.themoviedb.org/3/search/tv?api_key={api_key}&query={series_name}";
     private static final String FAVORITE_URL = "https://api.themoviedb.org/3/account/{account_id}/favorite?api_key={api_key}&session_id={session_id}";
     private static final String ADD_TO_LIST_URL = "https://api.themoviedb.org/4/list/{list_id}/items?api_key={api_key}&session_id={session_id}";
