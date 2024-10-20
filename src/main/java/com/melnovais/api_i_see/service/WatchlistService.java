@@ -16,7 +16,7 @@ import java.util.Map;
 @Service
 public class WatchlistService {
     // Constantes que armazenam informações importantes para as requisições à API do TMDb
-    private static final String API_KEY = "";
+    private static final String API_KEY = "eba6b92a7ac8f2164e0b744b637a5af5";
     private static final String SEARCH_URL = "https://api.themoviedb.org/3/search/tv?api_key={api_key}&query={series_name}";
     private static final String FAVORITE_URL = "https://api.themoviedb.org/3/account/{account_id}/favorite?api_key={api_key}&session_id={session_id}";
     private static final String ADD_TO_LIST_URL = "https://api.themoviedb.org/4/list/{list_id}/items?api_key={api_key}&session_id={session_id}";
@@ -96,40 +96,108 @@ public class WatchlistService {
 
     // Método para adicionar séries à lista de "Terminadas"
     public ResponseEntity<String> adicionarSeriesTerminadas(List<Integer> seriesIds, String listId, String sessionId) {
-        // Cria uma lista de mapas com "media_type" e "media_id"
         List<Map<String, Object>> items = new ArrayList<>();
+        List<String> mensagens = new ArrayList<>();  // Lista para armazenar mensagens sobre o status de cada série
+
+        // Prepara os itens para a requisição
         for (Integer id : seriesIds) {
-            // Adiciona os detalhes de cada série ao corpo da requisição
             Map<String, Object> item = new HashMap<>();
-            item.put("media_type", "tv"); // Especifica o tipo de mídia
-            item.put("media_id", id);     // Adiciona o ID da série
-            items.add(item);  // Adiciona o item à lista
+            item.put("media_type", "tv");
+            item.put("media_id", id);
+            items.add(item);
         }
 
-        // Corpo da requisição contendo a lista de séries
+        // Corpo da requisição
         Map<String, Object> body = new HashMap<>();
-        body.put("items", items); // Adiciona os itens ao corpo
+        body.put("items", items);
 
-        // Configura os headers para a requisição (definindo o tipo de conteúdo como JSON)
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
 
-        // Faz a requisição POST para adicionar as séries à lista de "Terminadas"
+        // Faz a requisição POST para adicionar as séries à lista
         ResponseEntity<String> response = restTemplate.postForEntity(
                 ADD_TO_LIST_URL, request, String.class, listId, API_KEY, sessionId
         );
 
-        // Verifica se a requisição foi bem-sucedida
+        // Verifica a resposta da API
         if (response.getStatusCode() == HttpStatus.OK) {
-            // Loga o sucesso ao adicionar as séries à lista
-            logger.info("Séries adicionadas à lista 'Terminadas' com sucesso!");
+            try {
+                JsonNode rootNode = objectMapper.readTree(response.getBody());
+                JsonNode results = rootNode.path("results");
+
+                // Itera sobre os resultados para verificar o status de cada série
+                if (results.isArray()) {
+                    for (JsonNode result : results) {
+                        boolean success = result.path("success").asBoolean();
+                        int mediaId = result.path("media_id").asInt();
+
+                        if (success) {
+                            mensagens.add("Série com ID " + mediaId + " adicionada à lista com sucesso.");
+                        } else {
+                            JsonNode errorMessages = result.path("error");
+                            if (errorMessages.isArray() && errorMessages.size() > 0) {
+                                String errorMessage = errorMessages.get(0).asText();
+                                if ("Media has already been taken".equals(errorMessage)) {
+                                    mensagens.add("Série com ID " + mediaId + " já está na lista.");
+                                } else {
+                                    mensagens.add("Erro ao adicionar série com ID " + mediaId + ": " + errorMessage);
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Retorna uma resposta contendo as mensagens sobre o status de cada série
+                return ResponseEntity.ok(String.join("\n", mensagens));
+
+            } catch (Exception e) {
+                logger.error("Erro ao processar a resposta da API: {}", e.getMessage());
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Erro ao processar a resposta da API.");
+            }
         } else {
-            // Loga o erro ao tentar adicionar as séries à lista
             logger.error("Erro ao adicionar séries à lista 'Terminadas': {}", response.getBody());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Erro ao adicionar séries à lista 'Terminadas'.");
+        }
+    }
+
+    // Novo método para verificar se um item está na lista
+    public boolean verificarStatusItem(int listId, int mediaId, String mediaType) {
+        // URL da API para verificar o status de um item
+        String itemStatusUrl = "https://api.themoviedb.org/4/list/{list_id}/item_status?media_id={media_id}&media_type={media_type}";
+
+        // Configurando os headers, com o token de usuário
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth("SEU_TOKEN_DE_USUARIO"); // Altere para seu token de acesso de usuário válido
+        HttpEntity<String> entity = new HttpEntity<>(headers);
+
+        // Mapeando os parâmetros da URL
+        Map<String, Object> params = new HashMap<>();
+        params.put("list_id", listId);
+        params.put("media_id", mediaId);
+        params.put("media_type", mediaType);
+
+        try {
+            // Fazendo a requisição GET para verificar o status do item
+            ResponseEntity<String> response = restTemplate.exchange(
+                    itemStatusUrl,
+                    HttpMethod.GET,
+                    entity,
+                    String.class,
+                    params
+            );
+
+            // Verificando o status na resposta
+            if (response.getStatusCode() == HttpStatus.OK) {
+                JsonNode rootNode = objectMapper.readTree(response.getBody());
+                boolean isInWatchlist = rootNode.path("status").asBoolean();
+                return isInWatchlist;
+            }
+        } catch (Exception e) {
+            logger.error("Erro ao verificar status do item: {}", e.getMessage());
         }
 
-        // Retorna uma resposta indicando que as séries foram adicionadas à lista
-        return ResponseEntity.ok("Séries adicionadas à lista 'Terminadas' com sucesso.");
+        return false; // Retorna false se ocorrer algum erro ou o item não estiver na lista
     }
+
 }
