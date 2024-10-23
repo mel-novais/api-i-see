@@ -7,51 +7,53 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api")
 public class WatchlistController {
-    // Logger para registrar informações e eventos importantes (sucessos ou erros)
-    private static final Logger logger = LoggerFactory.getLogger(WatchlistController.class);
 
-    // Dependência do serviço que lida com as operações da watchlist
+    // Logger para registrar informacoes sobre o controlador
+    private static final Logger logger = LoggerFactory.getLogger(WatchlistController.class);
     private final WatchlistService watchlistService;
 
-    // Construtor para injetar o serviço WatchlistService
+    // Construtor que inicializa o servico de watchlist
     public WatchlistController(WatchlistService watchlistService) {
         this.watchlistService = watchlistService;
     }
 
-    // Endpoint que recebe uma lista de nomes de séries e retorna seus IDs
+    // Endpoint para buscar os IDs das series
     @PostMapping("/buscarSeriesIds")
     public List<Integer> buscarSeriesIds(@RequestBody List<String> seriesNomes) throws Exception {
-        // Loga a lista de séries cujos IDs serão buscados
-        logger.info("Buscando IDs das séries: {}", seriesNomes);
-        // Chama o serviço para buscar os IDs das séries
+        logger.info("Buscando IDs das series: {}", seriesNomes);
         return watchlistService.buscarSeriesIds(seriesNomes);
     }
 
-    // Endpoint que adiciona as séries aos favoritos da conta
+    // Endpoint para adicionar series aos favoritos
     @PostMapping("/adicionarFavoritos")
     public ResponseEntity<String> adicionarSeriesFavoritas(
-            @RequestBody List<Integer> seriesIds,  // Recebe os IDs das séries
-            @RequestParam String accountId,        // Recebe o ID da conta
-            @RequestParam String sessionId) {      // Recebe o ID da sessão
-        // Loga a ação de adicionar séries aos favoritos com base nos IDs fornecidos
-        logger.info("Adicionando séries aos favoritos: {}", seriesIds);
-        // Chama o serviço para adicionar as séries aos favoritos
+            @RequestBody List<Integer> seriesIds,
+            @RequestParam String accountId,
+            @RequestParam String sessionId) {
+
+        logger.info("Adicionando series aos favoritos: {}", seriesIds);
         return watchlistService.adicionarSeriesFavoritas(seriesIds, accountId, sessionId);
     }
 
-    // Endpoint que adiciona as séries à lista "Terminadas"
-    @PostMapping("/adicionarTerminadas")
-    public ResponseEntity<String> adicionarSeriesTerminadas(
-            @RequestBody List<Integer> seriesIds,  // Recebe os IDs das séries
-            @RequestParam String listId,           // Recebe o ID da lista "Terminadas"
-            @RequestParam String sessionId) {      // Recebe o ID da sessão
-        // Loga a ação de adicionar séries à lista "Terminadas"
-        logger.info("Adicionando séries à lista 'Terminadas': {}", seriesIds);
-        // Chama o serviço para adicionar as séries à lista "Terminadas"
-        return watchlistService.adicionarSeriesTerminadas(seriesIds, listId, sessionId);
+    // Endpoint para adicionar series a watchlist
+    @PostMapping("/adicionarWatchList")
+    public ResponseEntity<String> adicionarSeriesWatchlist(
+            @RequestBody List<Map<String, Object>> items,
+            @RequestParam String listId,
+            @RequestParam String sessionId) {
+
+        // Extrai os IDs das series a partir dos itens recebidos
+        List<Integer> seriesIds = items.stream()
+                .map(item -> (Number) item.get("media_id"))
+                .map(Number::intValue)
+                .collect(Collectors.toList());
+
+        return watchlistService.adicionarSeriesWatchlist(seriesIds, listId, sessionId);
     }
 }
