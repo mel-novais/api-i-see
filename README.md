@@ -70,48 +70,21 @@ Adicionar séries aos favoritos
 
 Adicionar séries a uma watchlist
 Crie uma watchlist copie o id dela e cole em 'idWatchlist' na url.
-- URL: https://api.themoviedb.org/4/list/idWatchlist/items?api_key=insira_aqui&session_id=insira_aqui
+- URL: /api/adicionarWatchList?listId=insira_aqui&sessionId=insira_aqui
 - Método: POST
 - Descrição: Envia um array com IDs de séries e adiciona a watchlist criado pelo usuário.
 - Exemplo de Corpo da Requisição:
 ```json
-{
-    "items": [
-        {
-            "media_type": "tv",
-            "media_id": 158762
-        },
-			 {
-            "media_type": "tv",
-            "media_id": 116135
-        }
-    ]
-}
+[
+      {
+        "media_type": "tv",
+        "media_id": 158762
+    },
+]
 ```
 
-exemplo de resposta:
-```json
-{
-	"success": true,
-	"status_code": 1,
-	"status_message": "Success.",
-	"results": [
-		{
-			"media_id": 158762,
-			"media_type": "tv",
-			"error": [
-				"Media has already been taken"
-			],
-			"success": false
-		},
-		{
-			"media_id": 116135,
-			"media_type": "tv",
-			"error": [
-				"Media has already been taken"
-			],
-			"success": false
-		}
-	]
-}
+exemplos de respostas:
+```txt
+Serie com ID 158762 ja esta na lista.
+Serie com ID 158762 adicionada a lista com sucesso.
 ```
