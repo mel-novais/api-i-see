@@ -88,3 +88,32 @@ exemplos de respostas:
 Serie com ID 158762 ja esta na lista.
 Serie com ID 158762 adicionada a lista com sucesso.
 ```
+
+--------------------------------------------------------------------------------------------
+
+## Boas Práticas no Desenvolvimento do Projeto
+Neste projeto, eu segui uma série de boas práticas de desenvolvimento de software para garantir que o código seja robusto, fácil de manter e eficiente.
+
+Injeção de Dependências
+Eu utilizei construtores para inicializar serviços, permitindo uma melhor gestão das dependências e promovendo a testabilidade do código.
+
+Tratamento de Exceções
+Implementei captura e log de exceções para lidar com possíveis erros na comunicação com a API externa, garantindo que o sistema possa tratar falhas de forma adequada e fornecer feedback útil aos usuários.
+
+Uso de Constantes
+Defini constantes para URLs e mensagens, o que facilita a manutenção do código e previne a repetição de strings ao longo do projeto.
+
+Separação de Responsabilidades
+Segmentei o projeto em camadas bem definidas entre o serviço (WatchlistService) e o controlador (WatchlistController). Cada camada tem responsabilidades claras e definidas, seguindo o princípio de responsabilidade única.
+
+Boas Práticas de Log
+Adotei o uso de logs para monitorar operações importantes e capturar possíveis erros, ajudando na depuração e monitoramento do sistema.
+
+Manipulação de JSON
+Utilizei o ObjectMapper para ler e interpretar respostas JSON da API, garantindo que o código lida corretamente com os dados recebidos.
+
+Uso de Streams e Lambdas
+Utilizei Streams para simplificar o processamento de coleções, como na extração de IDs de séries no controlador, tornando o código mais conciso e legível.
+
+Documentação
+Adicionei comentários detalhados no código para explicar a funcionalidade de cada método e a lógica aplicada, facilitando a compreensão e manutenção por outros desenvolvedores.
