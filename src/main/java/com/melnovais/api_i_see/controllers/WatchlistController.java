@@ -26,7 +26,9 @@ public class WatchlistController {
     // Endpoint para buscar os IDs das series
     @PostMapping("/buscarSeriesIds")
     public List<Integer> buscarSeriesIds(@RequestBody List<String> seriesNomes) throws Exception {
+        // Loga a operacao de busca de IDs das series
         logger.info("Buscando IDs das series: {}", seriesNomes);
+        // Chama o servico para buscar os IDs das series
         return watchlistService.buscarSeriesIds(seriesNomes);
     }
 
@@ -37,7 +39,9 @@ public class WatchlistController {
             @RequestParam String accountId,
             @RequestParam String sessionId) {
 
+        // Loga a operacao de adicionar series aos favoritos
         logger.info("Adicionando series aos favoritos: {}", seriesIds);
+        // Chama o servico para adicionar as series aos favoritos
         return watchlistService.adicionarSeriesFavoritas(seriesIds, accountId, sessionId);
     }
 
@@ -54,6 +58,7 @@ public class WatchlistController {
                 .map(Number::intValue)
                 .collect(Collectors.toList());
 
+        // Chama o servico para adicionar as series a watchlist
         return watchlistService.adicionarSeriesWatchlist(seriesIds, listId, sessionId);
     }
 }
