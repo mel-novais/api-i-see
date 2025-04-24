@@ -6,11 +6,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class WatchlistService {
@@ -56,9 +60,54 @@ public class WatchlistService {
         return seriesIds;
     }
 
+    public ResponseEntity<List<Map<String, Object>>> listarTendencias(String accountId, String sessionId) {
+        String url = "https://api.themoviedb.org/3/trending/tv/week?api_key=eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiJlYmE2YjkyYTdhYzhmMjE2NGUwYjc0NGI2MzdhNWFmNSIsIm5iZiI6MTY5Mzc4MDEzNS40Mywic3ViIjoiNjRmNTA4YTc4YzIyYzAwMGUzZWU3ZjI3Iiwic2NvcGVzIjpbImFwaV9yZWFkIl0sInZlcnNpb24iOjF9.3M1S6-JPtSocSPI9Ma9GZbT_6_ZEAceOVOsXSpFlQIQ";
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Content-Type", "application/json");
+        headers.set("Authorization", "Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiJlYmE2YjkyYTdhYzhmMjE2NGUwYjc0NGI2MzdhNWFmNSIsIm5iZiI6MTY5Mzc4MDEzNS40Mywic3ViIjoiNjRmNTA4YTc4YzIyYzAwMGUzZWU3ZjI3Iiwic2NvcGVzIjpbImFwaV9yZWFkIl0sInZlcnNpb24iOjF9.3M1S6-JPtSocSPI9Ma9GZbT_6_ZEAceOVOsXSpFlQIQ");  // Certifique-se de atualizar sua chave API aqui
+
+        HttpEntity<String> entity = new HttpEntity<>(headers);
+
+        RestTemplate restTemplate = new RestTemplate();
+        try {
+            ResponseEntity<Map> response = restTemplate.exchange(url, HttpMethod.GET, entity, Map.class);
+
+            if (response.getBody() != null && response.getBody().containsKey("results")) {
+                List<Map<String, Object>> results = (List<Map<String, Object>>) response.getBody().get("results");
+
+                List<Map<String, Object>> tvResults = results.stream()
+                        .collect(Collectors.toList());
+
+                return ResponseEntity.ok(tvResults);
+            } else {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Collections.emptyList());
+            }
+        } catch (HttpClientErrorException | HttpServerErrorException e) {
+            logger.error("Erro na requisição para a API do TMDb: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Collections.emptyList());
+        }
+    }
+
     // Metodo para adicionar series aos favoritos
     public ResponseEntity<String> adicionarSeriesFavoritas(List<Integer> seriesIds, String accountId, String sessionId) {
         return processFavoriteSeries(seriesIds, accountId, sessionId, FAVORITE_URL, "favoritada");
+    }
+
+    public ResponseEntity<String> listarFavoritos(String accountId, String sessionId) {
+        String url = "https://api.themoviedb.org/3/account/" + accountId + "/favorite/tv?session_id=" + sessionId;
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Content-Type", "application/json");
+
+        headers.set("Authorization", "Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiJlYmE2YjkyYTdhYzhmMjE2NGUwYjc0NGI2MzdhNWFmNSIsIm5iZiI6MTY5Mzc4MDEzNS40Mywic3ViIjoiNjRmNTA4YTc4YzIyYzAwMGUzZWU3ZjI3Iiwic2NvcGVzIjpbImFwaV9yZWFkIl0sInZlcnNpb24iOjF9.3M1S6-JPtSocSPI9Ma9GZbT_6_ZEAceOVOsXSpFlQIQ");
+
+        HttpEntity<String> entity = new HttpEntity<>(headers);
+
+        RestTemplate restTemplate = new RestTemplate();
+        ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, entity, String.class);
+
+        return response;
     }
 
     // Metodo para adicionar series a watchlist
@@ -158,7 +207,7 @@ public class WatchlistService {
                 // Adiciona mensagem indicando que a serie ja esta na lista
                 mensagens.add(String.format("Serie com ID %d ja esta na lista.", seriesId));
             } else {
-                // Adiciona mensagem de erro generico
+                // Adiciona mensagem de erro
                 mensagens.add(String.format(ERROR_MSG, action, seriesId, errorMessage));
             }
         }

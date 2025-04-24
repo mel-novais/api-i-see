@@ -23,6 +23,24 @@ public class WatchlistController {
         this.watchlistService = watchlistService;
     }
 
+    @GetMapping("/favoritos")
+    public ResponseEntity<String> listarFavoritos(
+            @RequestParam String accountId,
+            @RequestParam String sessionId) {
+
+        logger.info("Listando séries favoritas para o accountId: {}", accountId);
+        return watchlistService.listarFavoritos(accountId, sessionId);
+    }
+
+    @GetMapping("/tendencias")
+    public ResponseEntity<List<Map<String, Object>>> listarTendencias(
+            @RequestParam String accountId,
+            @RequestParam String sessionId) {
+
+        logger.info("Listando as tendências para o accountId: {}", accountId);
+        return watchlistService.listarTendencias(accountId, sessionId);
+    }
+
     // Endpoint para buscar os IDs das series
     @PostMapping("/buscarSeriesIds")
     public List<Integer> buscarSeriesIds(@RequestBody List<String> seriesNomes) throws Exception {
