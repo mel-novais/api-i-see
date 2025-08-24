@@ -1,8 +1,10 @@
 package com.melnovais.api_i_see.controllers;
 
 import com.melnovais.api_i_see.service.WatchlistService;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -12,71 +14,65 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api")
+@Slf4j
 public class WatchlistController {
 
-    // Logger para registrar informacoes sobre o controlador
-    private static final Logger logger = LoggerFactory.getLogger(WatchlistController.class);
-    private final WatchlistService watchlistService;
+    @Autowired
+    private WatchlistService watchlistService;
 
-    // Construtor que inicializa o servico de watchlist
-    public WatchlistController(WatchlistService watchlistService) {
-        this.watchlistService = watchlistService;
-    }
-
+    // endpoint GET para listar favoritos
+    // precisa de accountId e sessionId como parametros da url
     @GetMapping("/favoritos")
     public ResponseEntity<String> listarFavoritos(
             @RequestParam String accountId,
             @RequestParam String sessionId) {
 
-        logger.info("Listando séries favoritas para o accountId: {}", accountId);
+        log.info("Listando series favoritas para o accountId: {}", accountId);
         return watchlistService.listarFavoritos(accountId, sessionId);
     }
 
+    // endpoint GET para listar tendencias
     @GetMapping("/tendencias")
     public ResponseEntity<List<Map<String, Object>>> listarTendencias(
             @RequestParam String accountId,
             @RequestParam String sessionId) {
 
-        logger.info("Listando as tendências para o accountId: {}", accountId);
+        log.info("Listando as tendencias para o accountId: {}", accountId);
         return watchlistService.listarTendencias(accountId, sessionId);
     }
 
-    // Endpoint para buscar os IDs das series
+    // endpoint POST para buscar IDs de varias series a partir dos nomes
     @PostMapping("/buscarSeriesIds")
     public List<Integer> buscarSeriesIds(@RequestBody List<String> seriesNomes) throws Exception {
-        // Loga a operacao de busca de IDs das series
-        logger.info("Buscando IDs das series: {}", seriesNomes);
-        // Chama o servico para buscar os IDs das series
+        log.info("Buscando IDs das series: {}", seriesNomes);
         return watchlistService.buscarSeriesIds(seriesNomes);
     }
 
-    // Endpoint para adicionar series aos favoritos
+    // endpoint POST para adicionar series aos favoritos
+    // recebe lista de IDs no corpo da requisicao
     @PostMapping("/adicionarFavoritos")
     public ResponseEntity<String> adicionarSeriesFavoritas(
             @RequestBody List<Integer> seriesIds,
             @RequestParam String accountId,
             @RequestParam String sessionId) {
 
-        // Loga a operacao de adicionar series aos favoritos
-        logger.info("Adicionando series aos favoritos: {}", seriesIds);
-        // Chama o servico para adicionar as series aos favoritos
+        log.info("Adicionando series aos favoritos: {}", seriesIds);
         return watchlistService.adicionarSeriesFavoritas(seriesIds, accountId, sessionId);
     }
 
-    // Endpoint para adicionar series a watchlist
+    // endpoint POST para adicionar series a uma watchlist
+    // recebe lista de objetos com media_id e transforma em lista de inteiros
     @PostMapping("/adicionarWatchList")
     public ResponseEntity<String> adicionarSeriesWatchlist(
             @RequestBody List<Map<String, Object>> items,
             @RequestParam String listId,
             @RequestParam String sessionId) {
 
-        // Extrai os IDs das series a partir dos itens recebidos
         List<Integer> seriesIds = items.stream()
-                .map(item -> (Number) item.get("media_id"))
-                .map(Number::intValue)
+                .map(item -> (Number) item.get("media_id")) // pega o campo media_id
+                .map(Number::intValue) // converte para int
                 .collect(Collectors.toList());
 
-        // Chama o servico para adicionar as series a watchlist
         return watchlistService.adicionarSeriesWatchlist(seriesIds, listId, sessionId);
     }
 }
