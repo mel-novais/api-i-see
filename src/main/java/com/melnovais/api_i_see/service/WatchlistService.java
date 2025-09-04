@@ -28,7 +28,7 @@ public class WatchlistService {
     private static final String ADD_TO_LIST_URL = "https://api.themoviedb.org/4/list/{list_id}/items?api_key={api_key}&session_id={session_id}";
 
     private static final String MEDIA_TYPE_TV = "tv";
-    private static final String SUCCESS_MSG = "Serie com id: %d %s com sucesso.";
+    //private static final String SUCCESS_MSG = "Serie com id: %d %s com sucesso.";
     private static final String ERROR_MSG = "Erro ao %s serie com ID %d: %s";
 
     @Value("${tmdb.api.key}")
@@ -48,16 +48,21 @@ public class WatchlistService {
     // Busca ids das series pelo nome
     public List<Integer> buscarSeriesIds(List<String> seriesNomes) throws Exception {
         List<Integer> seriesIds = new ArrayList<>();
+
         for (String nome : seriesNomes) {
-            String response = restTemplate.getForObject(SEARCH_URL, String.class, apiKey, nome);
+            // remove qualquer "(xxxx)" com 4 dígitos no final
+            String nomeLimpo = nome.replaceAll("\\(\\d{4}\\)", "").trim();
+
+            String response = restTemplate.getForObject(SEARCH_URL, String.class, apiKey, nomeLimpo);
             JsonNode results = objectMapper.readTree(response).path("results");
 
             if (results.isArray() && results.size() > 0) {
                 seriesIds.add(results.get(0).path("id").asInt());
             } else {
-                log.warn("Serie nao encontrada: {}", nome);
+                log.warn("Serie nao encontrada: {}", nomeLimpo);
             }
         }
+
         log.info("ids das series: {}", objectMapper.writeValueAsString(seriesIds));
         return seriesIds;
     }
@@ -169,8 +174,7 @@ public class WatchlistService {
                 int mediaId = result.path("media_id").asInt();
 
                 if (success) {
-                    mensagens.add(String.format(SUCCESS_MSG, mediaId, action));
-                    log.info(SUCCESS_MSG, mediaId, action);
+                    mensagens.add(String.format("ok", mediaId, action));
                 } else {
                     handleErrors(result, mediaId, action, mensagens);
                 }

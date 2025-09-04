@@ -64,14 +64,9 @@ public class WatchlistController {
     // recebe lista de objetos com media_id e transforma em lista de inteiros
     @PostMapping("/adicionarWatchList")
     public ResponseEntity<String> adicionarSeriesWatchlist(
-            @RequestBody List<Map<String, Object>> items,
+            @RequestBody List<Integer> seriesIds,
             @RequestParam String listId,
             @RequestParam String sessionId) {
-
-        List<Integer> seriesIds = items.stream()
-                .map(item -> (Number) item.get("media_id")) // pega o campo media_id
-                .map(Number::intValue) // converte para int
-                .collect(Collectors.toList());
 
         return watchlistService.adicionarSeriesWatchlist(seriesIds, listId, sessionId);
     }
