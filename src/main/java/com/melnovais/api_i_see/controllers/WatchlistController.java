@@ -20,7 +20,6 @@ public class WatchlistController {
     @Autowired
     private WatchlistService watchlistService;
 
-    // endpoint GET para listar favoritos
     // precisa de accountId e sessionId como parametros da url
     @GetMapping("/favoritos")
     public ResponseEntity<String> listarFavoritos(
@@ -31,7 +30,6 @@ public class WatchlistController {
         return watchlistService.listarFavoritos(accountId, sessionId);
     }
 
-    // endpoint GET para listar tendencias
     @GetMapping("/tendencias")
     public ResponseEntity<List<Map<String, Object>>> listarTendencias(
             @RequestParam String accountId,
@@ -41,15 +39,12 @@ public class WatchlistController {
         return watchlistService.listarTendencias(accountId, sessionId);
     }
 
-    // endpoint POST para buscar IDs de varias series a partir dos nomes
     @PostMapping("/buscarSeriesIds")
     public List<Integer> buscarSeriesIds(@RequestBody List<String> seriesNomes) throws Exception {
         log.info("Buscando IDs das series: {}", seriesNomes);
         return watchlistService.buscarSeriesIds(seriesNomes);
     }
 
-    // endpoint POST para adicionar series aos favoritos
-    // recebe lista de IDs no corpo da requisicao
     @PostMapping("/adicionarFavoritos")
     public ResponseEntity<String> adicionarSeriesFavoritas(
             @RequestBody List<Integer> seriesIds,
@@ -60,8 +55,6 @@ public class WatchlistController {
         return watchlistService.adicionarSeriesFavoritas(seriesIds, accountId, sessionId);
     }
 
-    // endpoint POST para adicionar series a uma watchlist
-    // recebe lista de objetos com media_id e transforma em lista de inteiros
     @PostMapping("/adicionarWatchList")
     public ResponseEntity<String> adicionarSeriesWatchlist(
             @RequestBody List<Integer> seriesIds,
