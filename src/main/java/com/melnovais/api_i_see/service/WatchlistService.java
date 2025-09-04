@@ -45,7 +45,6 @@ public class WatchlistService {
         this.objectMapper = new ObjectMapper();
     }
 
-    // Busca ids das series pelo nome
     public List<Integer> buscarSeriesIds(List<String> seriesNomes) throws Exception {
         List<Integer> seriesIds = new ArrayList<>();
 
@@ -67,7 +66,6 @@ public class WatchlistService {
         return seriesIds;
     }
 
-    // Lista series em tendencia
     public ResponseEntity<List<Map<String, Object>>> listarTendencias(String accountId, String sessionId) {
         String url = "https://api.themoviedb.org/3/trending/tv/week?api_key=" + apiKey;
 
@@ -92,12 +90,10 @@ public class WatchlistService {
         }
     }
 
-    // Adiciona series nos favoritos
     public ResponseEntity<String> adicionarSeriesFavoritas(List<Integer> seriesIds, String accountId, String sessionId) {
         return processFavoriteSeries(seriesIds, accountId, sessionId, FAVORITE_URL, "favoritada");
     }
 
-    // Lista favoritos do usuario
     public ResponseEntity<String> listarFavoritos(String accountId, String sessionId) {
         String url = "https://api.themoviedb.org/3/account/" + accountId + "/favorite/tv?session_id=" + sessionId;
 
@@ -110,7 +106,6 @@ public class WatchlistService {
         return restTemplate.exchange(url, HttpMethod.GET, entity, String.class);
     }
 
-    // Adiciona series em uma watchlist
     public ResponseEntity<String> adicionarSeriesWatchlist(List<Integer> seriesIds, String listId, String sessionId) {
         return processWatchlistSeries(seriesIds, listId, sessionId, ADD_TO_LIST_URL, "adicionada a lista");
     }
@@ -147,7 +142,10 @@ public class WatchlistService {
         try {
             List<String> mensagens = new ArrayList<>();
             for (Integer seriesId : seriesIds) {
-                Map<String, Object> body = Map.of("media_type", MEDIA_TYPE_TV, "media_id", seriesId, "favorite", true);
+                Map<String, Object> body = Map.of(
+                        "media_type", MEDIA_TYPE_TV,
+                        "media_id", seriesId,
+                        "favorite", true);
 
                 HttpHeaders headers = new HttpHeaders();
                 headers.setContentType(MediaType.APPLICATION_JSON);
@@ -164,26 +162,30 @@ public class WatchlistService {
     }
 
     // Processa resposta da API e gera mensagens
-    private void processResponse(ResponseEntity<String> response, List<Integer> seriesIds, String action, List<String> mensagens) throws Exception {
-        if (response.getStatusCode() == HttpStatus.OK || response.getStatusCode() == HttpStatus.CREATED) {
-            JsonNode rootNode = objectMapper.readTree(response.getBody());
-            JsonNode results = rootNode.path("results");
+    private void processResponse(ResponseEntity<String> response, List<Integer> seriesIds, String action, List<String> mensagens) {
+        try {
+            if (response.getStatusCode() == HttpStatus.OK || response.getStatusCode() == HttpStatus.CREATED) {
+                JsonNode rootNode = objectMapper.readTree(response.getBody());
+                boolean success = rootNode.path("success").asBoolean(false);
+                String statusMessage = rootNode.path("status_message").asText();
 
-            for (JsonNode result : results) {
-                boolean success = result.path("success").asBoolean();
-                int mediaId = result.path("media_id").asInt();
-
-                if (success) {
-                    mensagens.add(String.format("ok", mediaId, action));
-                } else {
-                    handleErrors(result, mediaId, action, mensagens);
+                for (Integer seriesId : seriesIds) {
+                    if (success) {
+                        mensagens.add(String.format("Serie com id %d %s com sucesso", seriesId, action));
+                    } else {
+                        mensagens.add(String.format("Falha ao %s serie %d", action, seriesId));
+                    }
                 }
+            } else {
+                mensagens.add(String.format(ERROR_MSG, action, seriesIds, response.getBody()));
+                log.error(ERROR_MSG, action, seriesIds, response.getBody());
             }
-        } else {
-            mensagens.add(String.format(ERROR_MSG, action, seriesIds, response.getBody()));
-            log.error(ERROR_MSG, action, seriesIds, response.getBody());
+        } catch (Exception e) {
+            mensagens.add(String.format("Erro ao processar a resposta da API para series %s: %s", seriesIds, e.getMessage()));
+            log.error("Erro ao processar resposta da API", e);
         }
     }
+
 
     // Trata erros retornados pela API
     private void handleErrors(JsonNode rootNode, Integer seriesId, String action, List<String> mensagens) {
