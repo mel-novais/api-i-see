@@ -43,7 +43,6 @@ public class WatchlistController {
     public ResponseEntity<String> adicionarSeriesWatchlist(
             @RequestBody List<Integer> seriesIds,
             @RequestParam String listId) {
-
         return watchlistService.adicionarSeriesWatchlist(seriesIds, listId);
     }
 }
