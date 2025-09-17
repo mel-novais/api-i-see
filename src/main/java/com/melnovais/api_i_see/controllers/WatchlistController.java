@@ -2,15 +2,11 @@ package com.melnovais.api_i_see.controllers;
 
 import com.melnovais.api_i_see.service.WatchlistService;
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api")
@@ -20,14 +16,10 @@ public class WatchlistController {
     @Autowired
     private WatchlistService watchlistService;
 
-    // precisa de accountId e sessionId como parametros da url
     @GetMapping("/favoritos")
-    public ResponseEntity<String> listarFavoritos(
-            @RequestParam String accountId,
-            @RequestParam String sessionId) {
-
-        log.info("Listando series favoritas para o accountId: {}", accountId);
-        return watchlistService.listarFavoritos(accountId, sessionId);
+    public ResponseEntity<String> listarFavoritos() {
+        log.info("Listando series favoritas para o accountId: {}");
+        return watchlistService.listarFavoritos();
     }
 
     @GetMapping("/tendencias")

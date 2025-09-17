@@ -98,7 +98,7 @@ public class WatchlistService {
         return processFavoriteSeries(seriesIds, FAVORITE_URL, "favoritada");
     }
 
-    public ResponseEntity<String> listarFavoritos(String accountId, String sessionId) {
+    public ResponseEntity<String> listarFavoritos() {
         String url = "https://api.themoviedb.org/3/account/" + accountId + "/favorite/tv?session_id=" + sessionId;
 
         HttpHeaders headers = new HttpHeaders();
