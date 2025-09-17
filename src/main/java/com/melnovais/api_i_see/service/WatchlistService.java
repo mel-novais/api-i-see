@@ -35,6 +35,10 @@ public class WatchlistService {
     private String apiKey;
     @Value("${tmdb.api.token}")
     private String apiToken;
+    @Value("${tmdb.accountId}")
+    private String accountId;
+    @Value("${tmdb.sessionId}")
+    private String sessionId;
 
     // Utilitarios para requisicoes HTTP e JSON
     private final RestTemplate restTemplate;
@@ -56,7 +60,7 @@ public class WatchlistService {
             JsonNode results = objectMapper.readTree(response).path("results");
 
             if (results.isArray() && results.size() > 0) {
-                seriesIds.add(results.get(0).path("id").asInt());
+                seriesIds.add(Integer.valueOf(results.get(0).path("id").asInt()));
             } else {
                 log.warn("Serie nao encontrada: {}", nomeLimpo);
             }
@@ -66,7 +70,7 @@ public class WatchlistService {
         return seriesIds;
     }
 
-    public ResponseEntity<List<Map<String, Object>>> listarTendencias(String accountId, String sessionId) {
+    public ResponseEntity<List<Map<String, Object>>> listarTendencias() {
         String url = "https://api.themoviedb.org/3/trending/tv/week?api_key=" + apiKey;
 
         HttpHeaders headers = new HttpHeaders();
@@ -90,8 +94,8 @@ public class WatchlistService {
         }
     }
 
-    public ResponseEntity<String> adicionarSeriesFavoritas(List<Integer> seriesIds, String accountId, String sessionId) {
-        return processFavoriteSeries(seriesIds, accountId, sessionId, FAVORITE_URL, "favoritada");
+    public ResponseEntity<String> adicionarSeriesFavoritas(List<Integer> seriesIds) {
+        return processFavoriteSeries(seriesIds, FAVORITE_URL, "favoritada");
     }
 
     public ResponseEntity<String> listarFavoritos(String accountId, String sessionId) {
@@ -106,12 +110,12 @@ public class WatchlistService {
         return restTemplate.exchange(url, HttpMethod.GET, entity, String.class);
     }
 
-    public ResponseEntity<String> adicionarSeriesWatchlist(List<Integer> seriesIds, String listId, String sessionId) {
-        return processWatchlistSeries(seriesIds, listId, sessionId, ADD_TO_LIST_URL, "adicionada a lista");
+    public ResponseEntity<String> adicionarSeriesWatchlist(List<Integer> seriesIds, String listId) {
+        return processWatchlistSeries(seriesIds, listId, ADD_TO_LIST_URL, "adicionada a lista");
     }
 
     // Processa adicao de series em uma lista customizada
-    private ResponseEntity<String> processWatchlistSeries(List<Integer> seriesIds, String listId, String sessionId, String url, String action) {
+    private ResponseEntity<String> processWatchlistSeries(List<Integer> seriesIds, String listId, String url, String action) {
         try {
             List<Map<String, Object>> items = new ArrayList<>();
             for (Integer seriesId : seriesIds) {
@@ -138,14 +142,15 @@ public class WatchlistService {
     }
 
     // Processa adicao de series como favoritas
-    private ResponseEntity<String> processFavoriteSeries(List<Integer> seriesIds, String accountId, String sessionId, String url, String action) {
+    private ResponseEntity<String> processFavoriteSeries(List<Integer> seriesIds, String url, String action) {
         try {
             List<String> mensagens = new ArrayList<>();
             for (Integer seriesId : seriesIds) {
                 Map<String, Object> body = Map.of(
                         "media_type", MEDIA_TYPE_TV,
                         "media_id", seriesId,
-                        "favorite", true);
+                        "favorite", true
+                );
 
                 HttpHeaders headers = new HttpHeaders();
                 headers.setContentType(MediaType.APPLICATION_JSON);
@@ -160,8 +165,7 @@ public class WatchlistService {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Erro ao processar a resposta da API.");
         }
     }
-
-    // Processa resposta da API e gera mensagens
+    
     private void processResponse(ResponseEntity<String> response, List<Integer> seriesIds, String action, List<String> mensagens) {
         try {
             if (response.getStatusCode() == HttpStatus.OK || response.getStatusCode() == HttpStatus.CREATED) {

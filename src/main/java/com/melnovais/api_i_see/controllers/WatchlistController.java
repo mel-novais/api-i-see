@@ -31,12 +31,8 @@ public class WatchlistController {
     }
 
     @GetMapping("/tendencias")
-    public ResponseEntity<List<Map<String, Object>>> listarTendencias(
-            @RequestParam String accountId,
-            @RequestParam String sessionId) {
-
-        log.info("Listando as tendencias para o accountId: {}", accountId);
-        return watchlistService.listarTendencias(accountId, sessionId);
+    public ResponseEntity<List<Map<String, Object>>> listarTendencias() {
+        return watchlistService.listarTendencias();
     }
 
     @PostMapping("/buscarSeriesIds")
@@ -46,21 +42,16 @@ public class WatchlistController {
     }
 
     @PostMapping("/adicionarFavoritos")
-    public ResponseEntity<String> adicionarSeriesFavoritas(
-            @RequestBody List<Integer> seriesIds,
-            @RequestParam String accountId,
-            @RequestParam String sessionId) {
-
-        log.info("Adicionando series aos favoritos: {}", seriesIds);
-        return watchlistService.adicionarSeriesFavoritas(seriesIds, accountId, sessionId);
+    public ResponseEntity<String> adicionarSeriesFavoritas(@RequestBody List<Integer> seriesIds) {
+        log.info("Adicionando séries aos favoritos: {}", seriesIds);
+        return watchlistService.adicionarSeriesFavoritas(seriesIds);
     }
 
     @PostMapping("/adicionarWatchList")
     public ResponseEntity<String> adicionarSeriesWatchlist(
             @RequestBody List<Integer> seriesIds,
-            @RequestParam String listId,
-            @RequestParam String sessionId) {
+            @RequestParam String listId) {
 
-        return watchlistService.adicionarSeriesWatchlist(seriesIds, listId, sessionId);
+        return watchlistService.adicionarSeriesWatchlist(seriesIds, listId);
     }
 }
